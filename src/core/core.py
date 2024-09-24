@@ -33,13 +33,14 @@ sample_json = {
 
 from collections import deque
 
-def bfs(node: str):
+def bfs(node: str, graph):
     visit = set()
     queue = deque()
     visit.add(node)
     queue.append(node)
 
     while queue:
+        print(queue)
         for _ in range(len(queue)):
             curr = queue.popleft()
             for neighbor in graph[curr]:
@@ -90,3 +91,4 @@ graph = {
 }
 
 print(is_acyclic_graph(graph))
+bfs("A", graph)
