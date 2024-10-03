@@ -2,73 +2,40 @@
 main file
 """
 
-# import asyncio
-# import json
-# import aio_pika
-# import aio_pika.abc
-
-# from src import constants
 
 
-# async def main(loop):
-#     # Connecting with the given parameters is also possible.
-#     # aio_pika.connect_robust(host="host", login="login", password="password")
-#     # You can only choose one option to create a connection, url or kw-based params.
-#     connection = await aio_pika.connect_robust(
-#        constants.MQ_URL, loop=loop
-#     )
-
-#     async with connection:
-#         # Creating channel
-#         channel: aio_pika.abc.AbstractChannel = await connection.channel()
-
-#         # Declaring queue
-#         worlflow_queue: aio_pika.abc.AbstractQueue = await channel.declare_queue(
-#             constants.WORKFLOW_QUEUE,
-#             durable=True,
-#             auto_delete=False,
-#             exclusive=False,
-#         )
-
-#         workflow_processor_queue: aio_pika.abc.AbstractQueue = await channel.declare_queue(
-#             constants.WORKFLOW_PROCESSOR_QUEUE,
-#             durable=True,
-#             auto_delete=False,
-#             exclusive=False,
-#         )
-
-#         async with worlflow_queue.iterator() as queue_iter:
-#             # Cancel consuming after __aexit__
-#             async for message in queue_iter:
-#                 async with message.process():
-#                     json_body: dict = json.loads(message.body.decode())
-#                     print(json_body.get("current_node", None))
-#                     await channel.default_exchange.publish(
-#                         aio_pika.Message(body=message.body),
-#                         routing_key=workflow_processor_queue.name,
-#                     )
-
-
-# if __name__ == "__main__":
-#     loop = asyncio.get_event_loop()
-#     loop.run_until_complete(main(loop))
-#     loop.close()
+# things i need to do
+# 1. Format a json for the playbooks nodes and vertices 
+# 2. DONT DO: Create a function that update the json into a graph
+# 3. Function that checks if graph is acyclical
+# 4. Create a function for bfs
+# 5. Connect to message queue
+# 6. Traverse to the graph. Each Node in the graph will be a message send in message queue
+# 7. TODO: Plan how to develop the connectors
+# 8. TODO: Create a function that runs a connectors actions specified in the message queue
 
 
 from fastapi import FastAPI
+from starlette.middleware.cors import CORSMiddleware
+from src.api import routes
 
-from src.workers.celery import create_dag
-from src.settings import settings
+
+def start_app():
+    app = FastAPI()
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+
+    )
+    app.include_router(routes, prefix="/api")
+    return app
+
+app = start_app()
 
 
-app = FastAPI()
-
-@app.get("/info")
-async def info():
-    return {
-        "app_name": settings.app_name,
-    }
-
-@app.get("/test-celery")
-async def info(input: int):
-    create_dag(input)
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
