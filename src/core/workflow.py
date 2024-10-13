@@ -30,7 +30,10 @@ class WorkflowGraph:
         Returns:
             A Celery task signature for the given value.
         """
-        return task_graph.s({val: True})
+        return task_graph.s({
+            val: None,
+
+        }, curr=val)
     
 
     def generate_list_of_task(self, vals: list[str]):
@@ -84,7 +87,6 @@ class WorkflowGraph:
         queue.append(node)
 
         while queue:
-            print(queue)
             callback(list(queue))
             for _ in range(len(queue)):
                 curr = queue.popleft()
