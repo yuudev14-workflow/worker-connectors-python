@@ -1,10 +1,12 @@
+from connectors.core.connector import Connector
 
 
+class Sample(Connector):
 
-class Sample():
-    def execute():
-        pass
-
-
-def get_incident_dashboard_details(config, params):
-    print("")
+    def execute(self, configs: dict, params: dict, operation: str, *args, **kwargs):
+        print(f"executed, {operation}")
+        return operation
+    
+    def health_check(self, configs: dict, params: dict, operation: str, *args, **kwargs):
+        print(f"executed, {operation}")
+        return operation
