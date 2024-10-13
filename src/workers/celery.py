@@ -1,6 +1,7 @@
-from celery import Celery, group, chain
-import datetime
+from celery import Celery
 from collections import ChainMap
+
+from src.logger.logging import logger
 
 celery_app = Celery('tasks', broker='pyamqp://guest:guest@localhost:5672', backend='db+postgresql://postgres:password@localhost:5432/celery_logs?sslmode=disable', )
 
@@ -14,6 +15,10 @@ def task_graph(*args: tuple[dict] | dict | list[dict], **kwargs):
         elif isinstance(arg, list) or isinstance(arg, tuple):
             result= dict(ChainMap(*arg))
     curr = kwargs.get("curr")
-    result[curr] = True
+    if curr:
+        result[curr] = True
+    else:
+        logger.warning("'curr' is not available in kwargs")
+    
     
     return result

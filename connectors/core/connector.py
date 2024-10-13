@@ -1,23 +1,13 @@
 import importlib
+from abc import ABC, abstractmethod
 module_name = "sample"
 
-class Connector:
-    def _read_config():
-        pass
+class Connector(ABC):
 
-    def _get_module():
-        module = importlib.import_module(f"src.connectors.{module_name}.connector")
-        print(getattr(module, "z")(100))
-        pass
+    @abstractmethod
+    def execute(self, configs: dict, params: dict, operation: str, *args, **kwargs):
+        raise NotImplementedError(f"execute function is not implemented in {self.__class__.__name__}")
 
-# TODO: create a decorator that constantly read the configs and pass params from the function
-
-
-# need to find a way to grab the connectors from the workflow, based on the connector name. 
-# need to create a class for each connector that inherits from Connector and implements the required methods.
-# we can execute the specifc action based on pyth getattr() function.
-# need  to check if the function exists in the connector class before executing it.
-
-
-
-# workflow in celery
+    @abstractmethod  
+    def health_check(self, configs: dict, params: dict, operation: str, *args, **kwargs):
+        raise NotImplementedError(f"execute function is not implemented in {self.__class__.__name__}")
