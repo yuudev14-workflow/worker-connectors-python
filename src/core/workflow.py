@@ -13,11 +13,12 @@ class WorkflowGraph:
     """
     class responsible for generating chain tasks
     """
-    def __init__(self, graph: Dict[str, list[str]]):
+    def __init__(self, graph: Dict[str, list[str]], task_information):
         self.graph = graph
+        self.task_information = task_information
 
 
-    def generate_task(self, val: str):
+    def generate_task(self, operation: str):
         """
         Generate a Celery task signature for a given value.
 
@@ -31,9 +32,8 @@ class WorkflowGraph:
             A Celery task signature for the given value.
         """
         return task_graph.s({
-            val: None,
-
-        }, curr=val)
+            operation: None,
+        }, operation=operation, task_information=self.task_information)
     
 
     def generate_list_of_task(self, vals: list[str]):
@@ -127,6 +127,27 @@ class WorkflowGraph:
         return False
 
 if __name__ == "__main__":
+    task_information = {
+        "START": {},
+        "A": {
+            "config": "sample",
+        },
+        "B": {
+            "config": "sample",
+        },
+        "C": {
+            "config": "sample",
+        },
+        "D": {
+            "config": "sample",
+        },
+        "E": {
+            "config": "sample",
+        },
+        "F": {
+            "config": "sample",
+        },
+    }
     graph = {
         'START': ['A'],
         'A': ['B', 'C'],
@@ -137,4 +158,4 @@ if __name__ == "__main__":
         'F': []
     }
 
-    x = WorkflowGraph(graph=graph)
+    x = WorkflowGraph(graph=graph, task_information = task_information)
