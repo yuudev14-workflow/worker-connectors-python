@@ -22,6 +22,9 @@ class CeleryController:
             "B": {
                 "config": "sample",
                 "connector_name": "sample",
+                "parameters": {
+                    "input": "{{var.steps.A}}"
+                }
             },
             "C": {
                 "config": "sample",
