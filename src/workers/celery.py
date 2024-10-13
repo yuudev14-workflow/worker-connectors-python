@@ -1,12 +1,13 @@
 from celery import Celery
 from collections import ChainMap
 import importlib
+import inspect
 
 from src.logger.logging import logger
 from connectors.core.connector import Connector
-import inspect
+from src.settings import settings
 
-celery_app = Celery('tasks', broker='pyamqp://guest:guest@localhost:5672', backend='db+postgresql://postgres:password@localhost:5432/celery_logs?sslmode=disable', )
+celery_app = Celery('tasks', broker=settings.celery_broker, backend=settings.celery_backend)
 
 def consolidate_results(*args: tuple[dict] | dict | list[dict]) -> dict:
     """
