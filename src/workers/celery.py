@@ -18,22 +18,26 @@ def task_graph(*args: tuple[dict] | dict | list[dict], **kwargs):
     tasks_variables = {
         "steps": results,
     }
-    operation: str = kwargs.get("operation")
-    logger.info(f"executing {operation} in playbook.")
+    curr: str = kwargs.get("curr")
+    logger.info(f"executing {curr} in playbook.")
     task_information: dict = kwargs.get("task_information", {})
-    if operation == "start":
+    if curr == "start":
         return results
-    if operation:
-        if operation not in task_information:
+    
+    if curr not in task_information:
             raise Exception(
-                f"operation ({operation}) does not exist in task_information"
+                f"operation ({curr}) does not exist in task_information"
             )
-        operation_information: dict = task_information[operation]
+    if curr:
+        operation_information: dict = task_information[curr]
         config_name = operation_information.get("config", None)
         parameters = operation_information.get("parameters", None)
         connector_name = operation_information.get("connector_name", None)
+        operation = operation_information.get("operation", None)
+        
+        
         if connector_name is None:
-            raise Exception(f"connector name is none for {operation}")
+            raise Exception(f"connector name is none for {curr}")
 
         # get the class container
         connector = Connector.get_class_container(connector_name)
@@ -52,7 +56,7 @@ def task_graph(*args: tuple[dict] | dict | list[dict], **kwargs):
 
         # assign the result for the operation
         logger.debug(f"execution complete for playbook, {operation=}")
-        results[operation] = operation_result
+        results[curr] = operation_result
     else:
         logger.warning("'curr' is not available in kwargs")
 

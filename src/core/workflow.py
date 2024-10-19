@@ -18,7 +18,7 @@ class WorkflowGraph:
         self.task_information = task_information
 
 
-    def generate_task(self, operation: str):
+    def generate_task(self, stepname: str):
         """
         Generate a Celery task signature for a given value.
 
@@ -32,8 +32,8 @@ class WorkflowGraph:
             A Celery task signature for the given value.
         """
         return task_graph.s({
-            operation: None,
-        }, operation=operation, task_information=self.task_information)
+            stepname: None,
+        }, curr=stepname, task_information=self.task_information)
     
 
     def generate_list_of_task(self, vals: list[str]):

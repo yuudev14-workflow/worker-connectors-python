@@ -41,8 +41,8 @@ async def consume_messages(loop):
             async for message in queue_iter:
                 async with message.process():
                     json_body: dict = json.loads(message.body.decode())
-                    graph = json_body.get("nodes")
-                    task_information = json_body.get("edges")
+                    graph = json_body.get("graph")
+                    task_information = json_body.get("tasks")
 
                     try:
 
