@@ -21,7 +21,7 @@ def task_graph(*args: tuple[dict] | dict | list[dict], **kwargs):
     operation: str = kwargs.get("operation")
     logger.info(f"executing {operation} in playbook.")
     task_information: dict = kwargs.get("task_information", {})
-    if operation == "START":
+    if operation == "start":
         return results
     if operation:
         if operation not in task_information:

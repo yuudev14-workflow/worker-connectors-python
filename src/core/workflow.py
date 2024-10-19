@@ -80,7 +80,7 @@ class WorkflowGraph:
         task_chain = chain(*task_chain_list)
         return task_chain.apply_async()
 
-    def bfs(self, callback: Callable, node: str = "START"):
+    def bfs(self, callback: Callable, node: str = "start"):
         visit = set()
         queue = deque()
         visit.add(node)
