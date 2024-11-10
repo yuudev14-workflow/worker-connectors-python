@@ -1,4 +1,5 @@
 from connectors.core.connector import Connector
+import time
 
 
 class Sample(Connector):

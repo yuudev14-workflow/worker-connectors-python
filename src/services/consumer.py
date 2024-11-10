@@ -28,34 +28,39 @@ async def consume_messages(loop):
             exclusive=False,
         )
 
-        # workflow_processor_queue: aio_pika.abc.AbstractQueue = await channel.declare_queue(
-        #     settings.WORKFLOW_PROCESSOR_QUEUE,
-        #     durable=True,
-        #     auto_delete=False,
-        #     exclusive=False,
-        # )
+        workflow_processor_queue: aio_pika.abc.AbstractQueue = await channel.declare_queue(
+            settings.workflow_processor_queue,
+            durable=True,
+            auto_delete=False,
+            exclusive=False,
+        )
 
         async with worlflow_queue.iterator() as queue_iter:
             # Cancel consuming after __aexit__
             print("listening to mq")
             async for message in queue_iter:
                 async with message.process():
-                    json_body: dict = json.loads(message.body.decode())
-                    graph = json_body.get("graph")
-                    task_information = json_body.get("tasks")
-
                     try:
+                        json_body: dict = json.loads(message.body.decode())
+                        graph = json_body.get("graph")
+                        task_information = json_body.get("tasks")
+                        workflow_history_id = json_body.get("workflow_history_id")
 
-                        if graph is None or task_information is None:
-                            raise Exception("either graph and task_information is None")
+                        if graph is None or task_information is None or workflow_history_id is None:
+                            raise Exception("either graph, task_information, or workflow_history_id is None")
                         
-                        workflow = WorkflowGraph(graph=graph, task_information=task_information)
+                        workflow = WorkflowGraph(graph=graph, task_information=task_information, workflow_history_id=workflow_history_id)
                         workflow.generate_chain_task()
-                        print(json_body)
-                        # await channel.default_exchange.publish(
-                        #     aio_pika.Message(body=message.body),
-                        #     routing_key=workflow_processor_queue.name,
-                        # )
+                        await channel.default_exchange.publish(
+                            aio_pika.Message(body=json.dumps({
+                                "action": "workflow_update",
+                                "params": {
+                                    "status": "success",
+                                    "workflow_history_id": workflow_history_id
+                                }
+                            }).encode()),
+                            routing_key=workflow_processor_queue.name,
+                        )
                     except Exception as e:
                         print(e)
                         

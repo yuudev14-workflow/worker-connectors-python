@@ -2,7 +2,6 @@
 workflow core file
 """
 
-import celery
 from celery import group, chain
 from collections import deque
 from collections.abc import Callable
@@ -13,9 +12,10 @@ class WorkflowGraph:
     """
     class responsible for generating chain tasks
     """
-    def __init__(self, graph: Dict[str, list[str]], task_information):
+    def __init__(self, graph: Dict[str, list[str]], task_information: dict, workflow_history_id: str):
         self.graph = graph
         self.task_information = task_information
+        self.workflow_history_id = workflow_history_id
 
 
     def generate_task(self, stepname: str):

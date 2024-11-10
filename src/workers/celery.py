@@ -1,9 +1,11 @@
 from celery import Celery
 from celery.signals import task_failure, task_prerun, task_success
+from typing import Any
 
 
 from src.logger.logging import logger
 from connectors.core.connector import Connector
+import pika
 from src.settings import settings
 
 celery_app = Celery(
@@ -21,46 +23,59 @@ def task_graph(*args: tuple[dict] | dict | list[dict], **kwargs):
     curr: str = kwargs.get("curr")
     logger.info(f"executing {curr} in playbook.")
     task_information: dict = kwargs.get("task_information", {})
-    if curr == "start":
-        return results
     
-    if curr not in task_information:
-            raise Exception(
-                f"operation ({curr}) does not exist in task_information"
+    # send log
+
+    # request
+
+    try:
+
+        if curr == "start":
+            return results
+        
+        if curr not in task_information:
+                raise Exception(
+                    f"operation ({curr}) does not exist in task_information"
+                )
+        if curr:
+            operation_information: dict = task_information[curr]
+            config_name = operation_information.get("config", None)
+            parameters = operation_information.get("parameters", None)
+            connector_name = operation_information.get("connector_name", None)
+            operation = operation_information.get("operation", None)
+            
+            
+            if connector_name is None:
+                raise Exception(f"connector name is none for {curr}")
+
+            # get the class container
+            connector = Connector.get_class_container(connector_name)
+
+            # grab the config to use
+            config = Connector.get_connector_config(
+                config_name=config_name, connector_name=connector_name
             )
-    if curr:
-        operation_information: dict = task_information[curr]
-        config_name = operation_information.get("config", None)
-        parameters = operation_information.get("parameters", None)
-        connector_name = operation_information.get("connector_name", None)
-        operation = operation_information.get("operation", None)
-        
-        
-        if connector_name is None:
-            raise Exception(f"connector name is none for {curr}")
 
-        # get the class container
-        connector = Connector.get_class_container(connector_name)
+            params = Connector.evaluate_params(parameters=parameters, variables=tasks_variables)
 
-        # grab the config to use
-        config = Connector.get_connector_config(
-            config_name=config_name, connector_name=connector_name
-        )
+            # execute the operations
+            operation_result = connector.execute(
+                configs=config, params=params, operation=operation
+            )
 
-        params = Connector.evaluate_params(parameters=parameters, variables=tasks_variables)
+            # assign the result for the operation
+            logger.debug(f"execution complete for playbook, {operation=}")
+            results[curr] = operation_result
+        else:
+            logger.warning("'curr' is not available in kwargs")
 
-        # execute the operations
-        operation_result = connector.execute(
-            configs=config, params=params, operation=operation
-        )
+        return results
+    except Exception as e:
+        #  send log  
+         raise e
 
-        # assign the result for the operation
-        logger.debug(f"execution complete for playbook, {operation=}")
-        results[curr] = operation_result
-    else:
-        logger.warning("'curr' is not available in kwargs")
 
-    return results
+    
 
 
 # @task_prerun.connect(sender=task_graph)
