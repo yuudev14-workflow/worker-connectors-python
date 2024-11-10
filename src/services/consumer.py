@@ -28,13 +28,6 @@ async def consume_messages(loop):
             exclusive=False,
         )
 
-        # workflow_processor_queue: aio_pika.abc.AbstractQueue = await channel.declare_queue(
-        #     settings.workflow_processor_queue,
-        #     durable=True,
-        #     auto_delete=False,
-        #     exclusive=False,
-        # )
-
         async with worlflow_queue.iterator() as queue_iter:
             # Cancel consuming after __aexit__
             print("listening to mq")
@@ -51,17 +44,9 @@ async def consume_messages(loop):
                         
                         workflow = WorkflowGraph(graph=graph, task_information=task_information, workflow_history_id=workflow_history_id)
                         workflow.generate_chain_task()
+
                         print(json_body)
-                        # await channel.default_exchange.publish(
-                        #     aio_pika.Message(body=json.dumps({
-                        #         "action": "workflow_update",
-                        #         "params": {
-                        #             "status": "success",
-                        #             "workflow_history_id": workflow_history_id
-                        #         }
-                        #     }).encode()),
-                        #     routing_key=workflow_processor_queue.name,
-                        # )
+
                     except Exception as e:
                         print(e)
                         

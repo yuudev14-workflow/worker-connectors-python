@@ -1,43 +1,77 @@
 from celery import Celery
-from celery.signals import task_failure, task_prerun, task_success
 from typing import Any
-from kombu import Connection, Exchange, Queue
-import json
+from kombu import Connection, Queue
 
 
 from src.logger.logging import logger
 from connectors.core.connector import Connector
 from src.settings import settings
+from src import dto
 
 celery_app = Celery(
     "tasks", broker=settings.celery_broker, backend=settings.celery_backend
 )
 
 
-def send_task_status(workflow_history_id: str, task_id: str, status: str):
-    # RabbitMQ connection parameters
-    rabbit_url = settings.mq_url
-    # Create a connection
-    with Connection(rabbit_url) as conn:
+def send_message_to_mq(message: Any):
+    with Connection(settings.mq_url) as conn:
         # Declare the queue
         queue = Queue(settings.workflow_processor_queue, durable=True)
 
         # Produce a message
         with conn.Producer() as producer:
             producer.publish(
-                json.dumps(
-                    {
-                        "action": "task_status",
-                        "workflow_history_id": workflow_history_id,
-                        "task_id": task_id,
-                        "status": status,
-                    }
-                ),
+                message,
                 exchange="",
                 routing_key=queue.name,
                 declare=[queue],
                 delivery_mode=2,  # Make message persistent
             )
+
+
+def send_workflow_status(
+    workflow_history_id: str,
+    status: dto.message_payload.WorkflowStatus,
+    result: Any | None = None,
+    error: str | None = None,
+):
+    payload = dto.message_payload.MessageProcessorPayload(
+        action="workflow_status",
+        params=dto.message_payload.WorkflowStatusPayload(
+            workflow_history_id=workflow_history_id,
+            status=status,
+            result=result,
+            error=error,
+        ),
+    )
+    return send_message_to_mq(payload.model_dump_json())
+
+
+def send_task_status(
+    workflow_history_id: str,
+    task_id: str,
+    status: dto.message_payload.TaskStatus,
+    result: Any | None = None,
+    error: str | None = None,
+):
+    payload = dto.message_payload.MessageProcessorPayload(
+        action="workflow_status",
+        params=dto.message_payload.TaskStatusPayload(
+            workflow_history_id=workflow_history_id,
+            task_id=task_id,
+            status=status,
+            result=result,
+            error=error,
+        ),
+    )
+    return send_message_to_mq(payload.model_dump_json())
+
+
+@celery_app.task
+def workflow_completed(*args: tuple[dict] | dict | list[dict], **kwargs):
+    workflow_history_id: dict = kwargs.get("workflow_history_id")
+    send_workflow_status(workflow_history_id, "success")
+    return args
 
 
 @celery_app.task
@@ -75,7 +109,7 @@ def task_graph(*args: tuple[dict] | dict | list[dict], **kwargs):
         send_task_status(
             workflow_history_id=workflow_history_id,
             task_id=operation_information.get("id"),
-            status="in progress",
+            status="in_progress",
         )
 
         # get the class container
@@ -110,8 +144,9 @@ def task_graph(*args: tuple[dict] | dict | list[dict], **kwargs):
         send_task_status(
             workflow_history_id=workflow_history_id,
             task_id=operation_information.get("id"),
-            status="error",
+            status="failed",
         )
+        send_workflow_status(workflow_history_id, status="failed")
         raise e
 
 

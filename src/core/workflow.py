@@ -6,7 +6,7 @@ from celery import group, chain
 from collections import deque
 from collections.abc import Callable
 from typing import Dict
-from src.workers.celery import task_graph
+from src.workers.celery import task_graph, workflow_completed
 
 
 class WorkflowGraph:
@@ -84,7 +84,13 @@ class WorkflowGraph:
 
         self.bfs(lambda x: task_chain_list.append(self.generate_list_of_task(x)))
 
-        task_chain = chain(*task_chain_list)
+        task_chain = chain(
+            *task_chain_list,
+            workflow_completed.s(
+                task_information=self.task_information,
+                workflow_history_id=self.workflow_history_id,
+            )
+        )
         return task_chain.apply_async()
 
     def bfs(self, callback: Callable, node: str = "start"):
@@ -129,7 +135,7 @@ class WorkflowGraph:
 
         return False
 
-
+# tests
 if __name__ == "__main__":
     task_information = {
         "START": {},
