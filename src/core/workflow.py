@@ -8,15 +8,21 @@ from collections.abc import Callable
 from typing import Dict
 from src.workers.celery import task_graph
 
+
 class WorkflowGraph:
     """
     class responsible for generating chain tasks
     """
-    def __init__(self, graph: Dict[str, list[str]], task_information: dict, workflow_history_id: str):
+
+    def __init__(
+        self,
+        graph: Dict[str, list[str]],
+        task_information: dict,
+        workflow_history_id: str,
+    ):
         self.graph = graph
         self.task_information = task_information
         self.workflow_history_id = workflow_history_id
-
 
     def generate_task(self, stepname: str):
         """
@@ -31,10 +37,14 @@ class WorkflowGraph:
         Returns:
             A Celery task signature for the given value.
         """
-        return task_graph.s({
-            stepname: None,
-        }, curr=stepname, task_information=self.task_information)
-    
+        return task_graph.s(
+            {
+                stepname: None,
+            },
+            curr=stepname,
+            task_information=self.task_information,
+            workflow_history_id=self.workflow_history_id,
+        )
 
     def generate_list_of_task(self, vals: list[str]):
         """
@@ -53,10 +63,7 @@ class WorkflowGraph:
         """
         if len(vals) == 1:
             return self.generate_task(vals[0])
-        return group(
-            [self.generate_task(val) for val in vals]
-        )
-
+        return group([self.generate_task(val) for val in vals])
 
     def generate_chain_task(self):
         """
@@ -72,11 +79,11 @@ class WorkflowGraph:
 
         if self.is_acyclic_graph():
             raise Exception()
-        
+
         task_chain_list = []
 
         self.bfs(lambda x: task_chain_list.append(self.generate_list_of_task(x)))
-        
+
         task_chain = chain(*task_chain_list)
         return task_chain.apply_async()
 
@@ -95,7 +102,6 @@ class WorkflowGraph:
                         visit.add(neighbor)
                         queue.append(neighbor)
 
-
     def is_acyclic_graph(self):
         visit: set = set()
         stack: set = set()
@@ -103,28 +109,26 @@ class WorkflowGraph:
         def dfs(node: str):
             if node in stack:
                 return True
-            
+
             if node in visit:
                 return False
-            
+
             visit.add(node)
             stack.add(node)
-
 
             for neighbor in self.graph[node]:
                 if dfs(neighbor):
                     return True
-                
+
             stack.remove(node)
             return False
-
-
 
         for node in self.graph:
             if dfs(node):
                 return True
-            
+
         return False
+
 
 if __name__ == "__main__":
     task_information = {
@@ -149,13 +153,13 @@ if __name__ == "__main__":
         },
     }
     graph = {
-        'START': ['A'],
-        'A': ['B', 'C'],
-        'B': ['D'],
-        'C': ['E', 'D'],
-        'D': [],
-        'E': ['F'],
-        'F': []
+        "START": ["A"],
+        "A": ["B", "C"],
+        "B": ["D"],
+        "C": ["E", "D"],
+        "D": [],
+        "E": ["F"],
+        "F": [],
     }
 
-    x = WorkflowGraph(graph=graph, task_information = task_information)
+    x = WorkflowGraph(graph=graph, task_information=task_information)
