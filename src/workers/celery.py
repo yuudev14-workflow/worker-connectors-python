@@ -55,7 +55,7 @@ def send_task_status(
     error: str | None = None,
 ):
     payload = dto.message_payload.MessageProcessorPayload(
-        action="workflow_status",
+        action="task_status",
         params=dto.message_payload.TaskStatusPayload(
             workflow_history_id=workflow_history_id,
             task_id=task_id,
@@ -86,8 +86,7 @@ def task_graph(*args: tuple[dict] | dict | list[dict], **kwargs):
     task_information: dict = kwargs.get("task_information", {})
     workflow_history_id: dict = kwargs.get("workflow_history_id")
 
-    if curr == "start":
-        return results
+    
 
     if curr not in task_information:
         raise Exception(f"operation ({curr}) does not exist in task_information")
@@ -111,6 +110,22 @@ def task_graph(*args: tuple[dict] | dict | list[dict], **kwargs):
             task_id=operation_information.get("id"),
             status="in_progress",
         )
+
+        config_name = operation_information.get("config", None)
+        parameters = operation_information.get("parameters", None)
+        connector_name = operation_information.get("connector_name", None)
+        operation = operation_information.get("operation", None)
+
+        if connector_name is None:
+            raise Exception(f"connector name is none for {curr}")
+
+        if curr == "start":
+            send_task_status(
+                workflow_history_id=workflow_history_id,
+                task_id=operation_information.get("id"),
+                status="success",
+            )
+            return results
 
         # get the class container
         connector = Connector.get_class_container(connector_name)
