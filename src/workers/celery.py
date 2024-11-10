@@ -1,6 +1,7 @@
 from celery import Celery
 from typing import Any
 from kombu import Connection, Queue
+import traceback
 
 
 from src.logger.logging import logger
@@ -86,8 +87,6 @@ def task_graph(*args: tuple[dict] | dict | list[dict], **kwargs):
     task_information: dict = kwargs.get("task_information", {})
     workflow_history_id: dict = kwargs.get("workflow_history_id")
 
-    
-
     if curr not in task_information:
         raise Exception(f"operation ({curr}) does not exist in task_information")
     if curr is None:
@@ -151,17 +150,22 @@ def task_graph(*args: tuple[dict] | dict | list[dict], **kwargs):
             workflow_history_id=workflow_history_id,
             task_id=operation_information.get("id"),
             status="success",
+            result=results[curr]
         )
 
         return results
     except Exception as e:
         #  send log
+        error_trace = traceback.format_exc()
         send_task_status(
             workflow_history_id=workflow_history_id,
             task_id=operation_information.get("id"),
             status="failed",
+            error=str(e) + "\n" + error_trace,
         )
-        send_workflow_status(workflow_history_id, status="failed")
+        send_workflow_status(
+            workflow_history_id, status="failed", error=str(e) + "\n" + error_trace
+        )
         raise e
 
 
