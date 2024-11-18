@@ -108,6 +108,59 @@ class WorkflowGraph:
                         visit.add(neighbor)
                         queue.append(neighbor)
 
+
+    def generate_chain_task_using_topological_sort(self):
+        """Generates a chain of tasks based on the graph provided."""
+        task_groups = self.topological_sort_with_groups()
+        
+        # Create a chain from the groups of tasks
+        task_chain = chain(
+            *task_groups,
+            workflow_completed.s(
+                task_information=self.task_information,
+                workflow_history_id=self.workflow_history_id,
+            )
+        )
+        return task_chain.apply_async()
+
+    def topological_sort_with_groups(self) -> list[Callable]:
+        """
+        Perform topological sorting on the graph and create groups for parallel execution.
+        
+        """
+        indegree = {u: 0 for u in self.graph}
+        for u in self.graph:
+            for v in self.graph[u]:
+                indegree[v] += 1
+        print(indegree)
+
+        queue = deque()
+        # Start with nodes that have zero indegree
+        for u in indegree:
+            if indegree[u] == 0:
+                queue.append(u)
+
+        sorted_task_groups = []
+
+        while queue:
+            current_group = [] 
+            current_size = len(queue)
+
+            for _ in range(current_size):
+                node = queue.popleft()
+                current_group.append(self.generate_task(node))
+                
+                # Process neighbors
+                for neighbor in self.graph[node]:
+                    indegree[neighbor] -= 1
+                    if indegree[neighbor] == 0:
+                        queue.append(neighbor)
+
+            sorted_task_groups.append(group(*current_group)) 
+
+        return sorted_task_groups
+
+
     def is_acyclic_graph(self):
         visit: set = set()
         stack: set = set()

@@ -43,7 +43,7 @@ async def consume_messages(loop):
                             raise Exception("either graph, task_information, or workflow_history_id is None")
                         
                         workflow = WorkflowGraph(graph=graph, task_information=task_information, workflow_history_id=workflow_history_id)
-                        workflow.generate_chain_task()
+                        workflow.generate_chain_task_using_topological_sort()
 
                         print(json_body)
 
