@@ -132,7 +132,6 @@ class WorkflowGraph:
         for u in self.graph:
             for v in self.graph[u]:
                 indegree[v] += 1
-        print(indegree)
 
         queue = deque()
         # Start with nodes that have zero indegree
