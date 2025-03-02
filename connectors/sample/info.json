@@ -1,5 +1,6 @@
 {
-  "name": "",
+  "name": "Sample",
+  "id": "sample",
   "configuration": {
     "fields": [
       {
