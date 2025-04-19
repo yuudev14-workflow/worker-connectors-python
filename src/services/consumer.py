@@ -35,6 +35,7 @@ async def consume_messages(loop):
                 async with message.process():
                     try:
                         json_body: dict = json.loads(message.body.decode())
+                        print(json.dumps(json_body, indent=2))
                         graph = json_body.get("graph")
                         task_information = json_body.get("tasks")
                         workflow_history_id = json_body.get("workflow_history_id")

@@ -39,14 +39,34 @@
   },
   "operations": [
     {
-      "operation": "",
-      "title": "",
+      "operation": "operation1",
+      "title": "get_incident_list",
       "description": "",
       "annotation": "get_incident_list",
       "enabled": true,
       "parameters": [
         {
-          "title": "",
+          "title": "operation1",
+          "description": "",
+          "required": true,
+          "editable": true,
+          "visible": true,
+          "type": "text",
+          "tooltip": "",
+          "name": "",
+          "placeholder": ""
+        }
+      ]
+    },
+    {
+      "operation": "operation2",
+      "title": "get_incident_list_2",
+      "description": "",
+      "annotation": "get_incident_list_2",
+      "enabled": true,
+      "parameters": [
+        {
+          "title": "operation2",
           "description": "",
           "required": true,
           "editable": true,

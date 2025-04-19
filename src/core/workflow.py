@@ -64,6 +64,7 @@ class WorkflowGraph:
         if len(vals) == 1:
             return self.generate_task(vals[0])
         return group([self.generate_task(val) for val in vals])
+    
 
     def generate_chain_task(self):
         """
@@ -111,6 +112,8 @@ class WorkflowGraph:
 
     def generate_chain_task_using_topological_sort(self):
         """Generates a chain of tasks based on the graph provided."""
+        if self.is_acyclic_graph():
+            raise Exception()
         task_groups = self.topological_sort_with_groups()
         
         # Create a chain from the groups of tasks
