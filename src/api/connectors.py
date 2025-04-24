@@ -23,6 +23,11 @@ class ConnectorsController:
                 try:
                     with connectors_path.open() as file:
                         connector_info = json.load(file)
+                        # check for configs
+                        config_path = Path(CONNECTORS_DIR + "/" + item.name + "/configs")
+                        if config_path.exists():
+                            configs = [config.name for config in config_path.iterdir() if config.is_file()]
+                            connector_info["configs"] = configs
                         connectors_data.append(connector_info)
                 except json.JSONDecodeError:
                     logger.warning(f"Error decoding JSON from {connectors_path}")
