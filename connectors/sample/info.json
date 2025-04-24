@@ -46,7 +46,29 @@
       "enabled": true,
       "parameters": [
         {
-          "title": "operation1",
+          "title": "task1",
+          "description": "",
+          "required": true,
+          "editable": true,
+          "visible": true,
+          "type": "text",
+          "tooltip": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "title": "task2",
+          "description": "",
+          "required": true,
+          "editable": true,
+          "visible": true,
+          "type": "text",
+          "tooltip": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "title": "task3",
           "description": "",
           "required": true,
           "editable": true,
