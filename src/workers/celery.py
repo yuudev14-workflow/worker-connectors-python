@@ -150,7 +150,7 @@ def task_graph(*args: tuple[dict] | dict | list[dict], **kwargs):
             workflow_history_id=workflow_history_id,
             task_id=operation_information.get("id"),
             status="success",
-            result=results[curr]
+            result=results[curr],
         )
 
         return results

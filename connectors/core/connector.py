@@ -10,16 +10,24 @@ from jinja2 import Template, Environment
 from src.logger.logging import logger
 
 env = Environment()
+
+
 class Connector(ABC):
 
     @abstractmethod
     def execute(self, configs: dict, params: dict, operation: str, *args, **kwargs):
-        raise NotImplementedError(f"execute function is not implemented in {self.__class__.__name__}")
+        raise NotImplementedError(
+            f"execute function is not implemented in {self.__class__.__name__}"
+        )
 
-    @abstractmethod 
-    def health_check(self, configs: dict, params: dict, operation: str, *args, **kwargs):
-        raise NotImplementedError(f"execute function is not implemented in {self.__class__.__name__}")
-    
+    @abstractmethod
+    def health_check(
+        self, configs: dict, params: dict, operation: str, *args, **kwargs
+    ):
+        raise NotImplementedError(
+            f"execute function is not implemented in {self.__class__.__name__}"
+        )
+
     @classmethod
     def consolidate_results(cls, *args: tuple[dict] | dict | list[dict]) -> dict:
         """
@@ -89,7 +97,6 @@ class Connector(ABC):
         logger.debug("No config available. return '{}'")
         return {}
 
-
     @classmethod
     def evaluate_params(cls, parameters: dict | None, variables: dict) -> dict:
         """
@@ -112,11 +119,12 @@ class Connector(ABC):
                 parameters[key] = cls.evaluate_params(val, variables)
             elif isinstance(val, list):
                 for i in range(len(val)):
-                    parameters[key][i] = cls.evaluate_params(parameters[key][i], variables)
+                    parameters[key][i] = cls.evaluate_params(
+                        parameters[key][i], variables
+                    )
             elif isinstance(val, str):
                 template = Template(val)
                 print(variables)
                 rendered_template = template.render(var=variables)
                 parameters[key] = rendered_template
         return parameters
-
